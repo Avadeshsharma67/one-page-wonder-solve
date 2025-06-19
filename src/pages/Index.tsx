@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { 
   Brain, 
   Heart, 
@@ -23,19 +24,29 @@ import {
   ChevronRight,
   Plus,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  X,
+  Trash2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useMoodTracking } from '../hooks/useMoodTracking';
+import { useGoalTracking } from '../hooks/useGoalTracking';
+import MoodChart from '../components/MoodChart';
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [selectedMood, setSelectedMood] = useState(null);
-  const [dailyGoals, setDailyGoals] = useState([
-    { id: 1, text: "Practice mindfulness", completed: false, streak: 3 },
-    { id: 2, text: "Write in journal", completed: true, streak: 7 },
-    { id: 3, text: "Get 8 hours sleep", completed: false, streak: 2 },
-    { id: 4, text: "Connect with a friend", completed: true, streak: 5 }
-  ]);
+  const [newGoalText, setNewGoalText] = useState('');
+  const [showAddGoal, setShowAddGoal] = useState(false);
+  
+  const { addMoodEntry, getTodaysMood } = useMoodTracking();
+  const { goals, toggleGoal, getGoalStats, addGoal, removeGoal } = useGoalTracking();
+  const { toast } = useToast();
+  
+  const todaysMood = getTodaysMood();
+  const goalStats = getGoalStats();
+  const completedGoals = goals.filter(goal => goal.completed).length;
+  const progressPercentage = (completedGoals / goals.length) * 100;
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -50,8 +61,6 @@ const Index = () => {
   };
 
   const greeting = getGreeting();
-  const completedGoals = dailyGoals.filter(goal => goal.completed).length;
-  const progressPercentage = (completedGoals / dailyGoals.length) * 100;
 
   const moodOptions = [
     { emoji: '😢', label: 'Struggling', value: 1, color: 'bg-red-100 border-red-300 hover:bg-red-200' },
@@ -81,25 +90,60 @@ const Index = () => {
       iconColor: "text-green-600"
     },
     {
-      title: "Track Progress",
-      description: "View your journey",
+      title: "View Progress",
+      description: "See your wellness journey",
       icon: TrendingUp,
-      link: "#",
+      link: "#progress",
       color: "from-blue-500 to-indigo-500",
       bgColor: "bg-blue-50",
       iconColor: "text-blue-600"
     }
   ];
 
-  const toggleGoal = (goalId) => {
-    setDailyGoals(prev => prev.map(goal => 
-      goal.id === goalId ? { ...goal, completed: !goal.completed } : goal
-    ));
+  const handleMoodSelect = (moodValue: number) => {
+    addMoodEntry(moodValue);
+    toast({
+      title: "Mood Recorded",
+      description: `Your mood (${moodValue}/5) has been saved for today.`,
+    });
+  };
+
+  const handleAddGoal = () => {
+    if (newGoalText.trim()) {
+      addGoal(newGoalText.trim());
+      setNewGoalText('');
+      setShowAddGoal(false);
+      toast({
+        title: "Goal Added",
+        description: "New wellness goal has been added to your list.",
+      });
+    }
+  };
+
+  const handleToggleGoal = (goalId: number) => {
+    toggleGoal(goalId);
+    const goal = goals.find(g => g.id === goalId);
+    if (goal) {
+      toast({
+        title: goal.completed ? "Goal Unchecked" : "Goal Completed!",
+        description: goal.completed 
+          ? "Goal unmarked for today." 
+          : `Great job on "${goal.text}"! Keep up the streak!`,
+      });
+    }
+  };
+
+  const handleRemoveGoal = (goalId: number) => {
+    removeGoal(goalId);
+    toast({
+      title: "Goal Removed",
+      description: "Goal has been removed from your list.",
+    });
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Enhanced Header */}
+      {/* Header */}
       <div className="bg-white/80 backdrop-blur-xl border-b border-indigo-100/50 sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -146,7 +190,10 @@ const Index = () => {
                   })}
                 </p>
                 <p className="text-sm text-gray-500">
-                  How are you feeling today? Your wellbeing matters.
+                  {todaysMood ? 
+                    `Your mood today: ${todaysMood.mood}/5 - How are you feeling now?` :
+                    "How are you feeling today? Your wellbeing matters."
+                  }
                 </p>
               </div>
               <div className="hidden sm:flex items-center gap-2">
@@ -158,7 +205,7 @@ const Index = () => {
                     })}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {currentTime.toLocaleDateString('en-US', { timeZoneName: 'short' }).split(',')[1]}
+                    Current time
                   </div>
                 </div>
               </div>
@@ -166,52 +213,49 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* Quick Mood Check */}
-        <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 bg-gradient-to-r from-pink-100 to-purple-100 rounded-xl">
-                <Heart className="w-5 h-5 text-pink-600" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Quick Mood Check */}
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-gradient-to-r from-pink-100 to-purple-100 rounded-xl">
+                  <Heart className="w-5 h-5 text-pink-600" />
+                </div>
+                Quick Mood Check
+              </CardTitle>
+              <CardDescription>
+                How are you feeling right now? Track your emotional journey.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-5 gap-3">
+                {moodOptions.map((mood) => (
+                  <button
+                    key={mood.value}
+                    onClick={() => handleMoodSelect(mood.value)}
+                    className={`group p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-105 ${
+                      todaysMood?.mood === mood.value 
+                        ? `${mood.color} shadow-lg ring-2 ring-offset-2 ring-purple-400` 
+                        : `${mood.color} shadow-sm hover:shadow-md`
+                    }`}
+                  >
+                    <div className="text-2xl sm:text-3xl mb-2 transition-transform group-hover:scale-110">
+                      {mood.emoji}
+                    </div>
+                    <div className="text-xs font-semibold text-gray-700">
+                      {mood.label}
+                    </div>
+                  </button>
+                ))}
               </div>
-              Quick Mood Check
-            </CardTitle>
-            <CardDescription>
-              How are you feeling right now? This helps track your emotional journey.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-5 gap-3">
-              {moodOptions.map((mood) => (
-                <button
-                  key={mood.value}
-                  onClick={() => setSelectedMood(mood.value)}
-                  className={`group p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-105 ${
-                    selectedMood === mood.value 
-                      ? `${mood.color} shadow-lg ring-2 ring-offset-2 ring-purple-400` 
-                      : `${mood.color} shadow-sm hover:shadow-md`
-                  }`}
-                >
-                  <div className="text-2xl sm:text-3xl mb-2 transition-transform group-hover:scale-110">
-                    {mood.emoji}
-                  </div>
-                  <div className="text-xs font-semibold text-gray-700">
-                    {mood.label}
-                  </div>
-                </button>
-              ))}
-            </div>
-            {selectedMood && (
-              <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-200 animate-fade-in">
-                <p className="text-sm text-purple-700 font-medium flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Thank you for sharing! Your mood has been recorded.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Daily Goals & Progress */}
+          {/* Mood Chart */}
+          <MoodChart />
+        </div>
+
+        {/* Enhanced Daily Goals & Progress */}
         <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="pb-4">
             <div className="flex justify-between items-start">
@@ -220,14 +264,14 @@ const Index = () => {
                   <div className="p-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl">
                     <Target className="w-5 h-5 text-blue-600" />
                   </div>
-                  Today's Wellness Goals
+                  Daily Wellness Goals
                 </CardTitle>
                 <CardDescription>
                   Track your daily mental health practices
                 </CardDescription>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">{completedGoals}/{dailyGoals.length}</div>
+                <div className="text-2xl font-bold text-blue-600">{completedGoals}/{goals.length}</div>
                 <div className="text-xs text-gray-500">completed</div>
               </div>
             </div>
@@ -235,33 +279,35 @@ const Index = () => {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">Progress</span>
+                <span className="text-gray-600">Today's Progress</span>
                 <span className="font-semibold text-blue-600">{Math.round(progressPercentage)}%</span>
               </div>
               <Progress value={progressPercentage} className="h-3 bg-gray-100" />
             </div>
             
             <div className="grid gap-3">
-              {dailyGoals.map((goal) => (
+              {goals.map((goal) => (
                 <div
                   key={goal.id}
-                  className={`group p-4 rounded-2xl border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] ${
+                  className={`group p-4 rounded-2xl border-2 transition-all duration-300 ${
                     goal.completed 
                       ? 'bg-green-50 border-green-200 shadow-sm' 
                       : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
                   }`}
-                  onClick={() => toggleGoal(goal.id)}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                        goal.completed 
-                          ? 'bg-green-500 border-green-500' 
-                          : 'border-gray-300 group-hover:border-blue-400'
-                      }`}>
+                    <div className="flex items-center gap-3 flex-1">
+                      <div 
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                          goal.completed 
+                            ? 'bg-green-500 border-green-500' 
+                            : 'border-gray-300 group-hover:border-blue-400'
+                        }`}
+                        onClick={() => handleToggleGoal(goal.id)}
+                      >
                         {goal.completed && <CheckCircle2 className="w-4 h-4 text-white" />}
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <span className={`font-medium ${goal.completed ? 'text-green-800 line-through' : 'text-gray-800'}`}>
                           {goal.text}
                         </span>
@@ -270,12 +316,76 @@ const Index = () => {
                             <Activity className="w-3 h-3 mr-1" />
                             {goal.streak} day streak
                           </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {goal.totalCompletions} total
+                          </Badge>
                         </div>
                       </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveGoal(goal.id)}
+                      className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
+              
+              {/* Add Goal Section */}
+              {showAddGoal ? (
+                <div className="p-4 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300">
+                  <div className="flex gap-2">
+                    <Input
+                      value={newGoalText}
+                      onChange={(e) => setNewGoalText(e.target.value)}
+                      placeholder="Enter a new wellness goal..."
+                      className="flex-1"
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddGoal()}
+                    />
+                    <Button onClick={handleAddGoal} size="sm" className="bg-blue-500 hover:bg-blue-600">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        setShowAddGoal(false);
+                        setNewGoalText('');
+                      }} 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => setShowAddGoal(true)}
+                  variant="outline"
+                  className="w-full border-dashed border-2 py-3 text-gray-600 hover:text-blue-600 hover:border-blue-300"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Goal
+                </Button>
+              )}
+            </div>
+            
+            {/* Goal Statistics */}
+            <div className="grid grid-cols-3 gap-4 p-4 bg-blue-50 rounded-2xl">
+              <div className="text-center">
+                <div className="text-xl font-bold text-blue-600">{goalStats.currentStreak}</div>
+                <div className="text-xs text-blue-700">Current Streak</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-green-600">{goalStats.longestStreak}</div>
+                <div className="text-xs text-green-700">Best Streak</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-purple-600">{goals.reduce((sum, g) => sum + g.totalCompletions, 0)}</div>
+                <div className="text-xs text-purple-700">Total Completed</div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -286,7 +396,7 @@ const Index = () => {
             <Link key={index} to={action.link} className="group">
               <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 hover:-translate-y-2">
                 <CardContent className="p-8 text-center space-y-4">
-                  <div className={`w-16 h-16 mx-auto ${action.bgColor} rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110`}>
+                  <div className={`w-16 h-16 mx-auto ${action.bg} rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110`}>
                     <action.icon className={`w-8 h-8 ${action.iconColor}`} />
                   </div>
                   <div className="space-y-2">
@@ -305,76 +415,6 @@ const Index = () => {
               </Card>
             </Link>
           ))}
-        </div>
-
-        {/* Wellness Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl">
-                  <Award className="w-5 h-5 text-yellow-600" />
-                </div>
-                Weekly Achievements
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-200">
-                  <div className="flex items-center gap-3">
-                    <Star className="w-5 h-5 text-yellow-600" />
-                    <span className="font-medium text-gray-800">Journal Streak</span>
-                  </div>
-                  <Badge className="bg-yellow-100 text-yellow-800">7 days</Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-200">
-                  <div className="flex items-center gap-3">
-                    <Smile className="w-5 h-5 text-green-600" />
-                    <span className="font-medium text-gray-800">Positive Mood Days</span>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800">5/7</Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-200">
-                  <div className="flex items-center gap-3">
-                    <Target className="w-5 h-5 text-blue-600" />
-                    <span className="font-medium text-gray-800">Goals Completed</span>
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-800">24/28</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl">
-                  <Timer className="w-5 h-5 text-indigo-600" />
-                </div>
-                Upcoming Reminders
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl border border-purple-200">
-                  <Clock className="w-5 h-5 text-purple-600" />
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-800">Evening Reflection</div>
-                    <div className="text-sm text-gray-600">Today at 8:00 PM</div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
-                  <Calendar className="w-5 h-5 text-blue-600" />
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-800">Weekly Check-in</div>
-                    <div className="text-sm text-gray-600">Tomorrow at 10:00 AM</div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Enhanced Footer */}
