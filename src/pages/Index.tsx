@@ -31,7 +31,9 @@ import {
 import { Link } from 'react-router-dom';
 import { useMoodTracking } from '../hooks/useMoodTracking';
 import { useGoalTracking } from '../hooks/useGoalTracking';
+import { useCycleTracking } from '../hooks/useCycleTracking';
 import MoodChart from '../components/MoodChart';
+import CycleTracker from '../components/CycleTracker';
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -255,6 +257,9 @@ const Index = () => {
           <MoodChart />
         </div>
 
+        {/* Cycle Tracker */}
+        <CycleTracker />
+
         {/* Enhanced Daily Goals & Progress */}
         <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="pb-4">
@@ -396,7 +401,7 @@ const Index = () => {
             <Link key={index} to={action.link} className="group">
               <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 hover:-translate-y-2">
                 <CardContent className="p-8 text-center space-y-4">
-                  <div className={`w-16 h-16 mx-auto ${action.bg} rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110`}>
+                  <div className={`w-16 h-16 mx-auto ${action.bgColor} rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110`}>
                     <action.icon className={`w-8 h-8 ${action.iconColor}`} />
                   </div>
                   <div className="space-y-2">
