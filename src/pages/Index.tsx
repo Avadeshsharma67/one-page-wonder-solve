@@ -144,47 +144,20 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-xl border-b border-indigo-100/50 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl shadow-lg">
-                <Brain className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  MindSpace
-                </h1>
-                <p className="text-sm text-gray-600 font-medium">Your mental wellness companion</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Link to="/resources" className="group px-4 py-2.5 text-sm bg-gradient-to-r from-green-500/10 to-teal-500/10 text-green-700 rounded-xl hover:from-green-500/20 hover:to-teal-500/20 transition-all duration-300 border border-green-200/50 hover:border-green-300/50 hover:scale-105">
-                <span className="font-medium">Resources</span>
-              </Link>
-              <Link to="/journal" className="group px-4 py-2.5 text-sm bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-700 rounded-xl hover:from-purple-500/20 hover:to-pink-500/20 transition-all duration-300 border border-purple-200/50 hover:border-purple-300/50 hover:scale-105">
-                <span className="font-medium">Journal</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pb-20 md:pb-8">
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-8">
         {/* Personalized Greeting */}
         <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-between">
+          <CardContent className="p-6 md:p-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <greeting.icon className={`w-8 h-8 ${greeting.color}`} />
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
+                  <greeting.icon className={`w-6 md:w-8 h-6 md:h-8 ${greeting.color}`} />
+                  <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
                     {greeting.text}!
                   </h2>
                 </div>
-                <p className="text-lg text-gray-600">
+                <p className="text-base md:text-lg text-gray-600">
                   It's {currentTime.toLocaleDateString('en-US', { 
                     weekday: 'long', 
                     month: 'long', 
@@ -198,17 +171,15 @@ const Index = () => {
                   }
                 </p>
               </div>
-              <div className="hidden sm:flex items-center gap-2">
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-gray-800">
-                    {currentTime.toLocaleTimeString('en-US', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Current time
-                  </div>
+              <div className="text-right">
+                <div className="text-xl md:text-2xl font-bold text-gray-800">
+                  {currentTime.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </div>
+                <div className="text-sm text-gray-500">
+                  Current time
                 </div>
               </div>
             </div>
@@ -230,18 +201,18 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-5 gap-2 md:gap-3">
                 {moodOptions.map((mood) => (
                   <button
                     key={mood.value}
                     onClick={() => handleMoodSelect(mood.value)}
-                    className={`group p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-105 ${
+                    className={`group p-3 md:p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-105 active:scale-95 ${
                       todaysMood?.mood === mood.value 
                         ? `${mood.color} shadow-lg ring-2 ring-offset-2 ring-purple-400` 
                         : `${mood.color} shadow-sm hover:shadow-md`
                     }`}
                   >
-                    <div className="text-2xl sm:text-3xl mb-2 transition-transform group-hover:scale-110">
+                    <div className="text-xl md:text-2xl lg:text-3xl mb-1 md:mb-2 transition-transform group-hover:scale-110">
                       {mood.emoji}
                     </div>
                     <div className="text-xs font-semibold text-gray-700">
@@ -312,11 +283,11 @@ const Index = () => {
                       >
                         {goal.completed && <CheckCircle2 className="w-4 h-4 text-white" />}
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <span className={`font-medium ${goal.completed ? 'text-green-800 line-through' : 'text-gray-800'}`}>
                           {goal.text}
                         </span>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <Badge variant="outline" className="text-xs">
                             <Activity className="w-3 h-3 mr-1" />
                             {goal.streak} day streak
@@ -331,7 +302,7 @@ const Index = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveGoal(goal.id)}
-                      className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -342,7 +313,7 @@ const Index = () => {
               {/* Add Goal Section */}
               {showAddGoal ? (
                 <div className="p-4 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300">
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Input
                       value={newGoalText}
                       onChange={(e) => setNewGoalText(e.target.value)}
@@ -350,19 +321,22 @@ const Index = () => {
                       className="flex-1"
                       onKeyPress={(e) => e.key === 'Enter' && handleAddGoal()}
                     />
-                    <Button onClick={handleAddGoal} size="sm" className="bg-blue-500 hover:bg-blue-600">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        setShowAddGoal(false);
-                        setNewGoalText('');
-                      }} 
-                      variant="outline" 
-                      size="sm"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button onClick={handleAddGoal} size="sm" className="bg-blue-500 hover:bg-blue-600 flex-1 sm:flex-none">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setShowAddGoal(false);
+                          setNewGoalText('');
+                        }} 
+                        variant="outline" 
+                        size="sm"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -400,12 +374,12 @@ const Index = () => {
           {quickActions.map((action, index) => (
             <Link key={index} to={action.link} className="group">
               <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 hover:-translate-y-2">
-                <CardContent className="p-8 text-center space-y-4">
-                  <div className={`w-16 h-16 mx-auto ${action.bgColor} rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110`}>
-                    <action.icon className={`w-8 h-8 ${action.iconColor}`} />
+                <CardContent className="p-6 md:p-8 text-center space-y-4">
+                  <div className={`w-12 h-12 md:w-16 md:h-16 mx-auto ${action.bgColor} rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110`}>
+                    <action.icon className={`w-6 h-6 md:w-8 md:h-8 ${action.iconColor}`} />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
+                    <h3 className="text-lg md:text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
                       {action.title}
                     </h3>
                     <p className="text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
